@@ -18,6 +18,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.Random;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -54,13 +55,13 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
     public void paint(Graphics g) {
         super.paintComponent(g);
         Graphics2D graphics2D = (Graphics2D) g;
-        graphics2D.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        graphics2D.setStroke(new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         graphics2D.setColor(Color.black);
         graphics2D.fillRect(0, 0, this.getWidth(), this.getHeight());
         graphics2D.setColor(Color.white);
 
         graphics2D.drawImage(lastImage, 0, 0, null);
-        int r = 40;
+        int r = 45;
 
         graphics2D.drawString("guess: " + guess, this.getWidth() / 2, 20);
 
