@@ -6,10 +6,14 @@
 package handdrawdigitrecognition;
 
 import NeuralNetwork.NeuralNetwork;
+
+import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +24,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.List;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -54,22 +60,32 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
     static BufferedImage lastImage;
     ArrayList<Integer[]> pointsToDraw = new ArrayList<>();
     static NeuralNetwork ir;
+    int guess;
 
     @Override
     public void paint(Graphics g) {
-
         super.paintComponent(g);
         Graphics2D graphics2D = (Graphics2D) g;
-
-        //Set  anti-alias!
-        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        graphics2D.clearRect(0, 0, this.getWidth(), this.getHeight());
+        graphics2D.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        graphics2D.setColor(Color.black);
+        graphics2D.fillRect(0, 0, this.getWidth(), this.getHeight());
+        graphics2D.setColor(Color.white);
 
         graphics2D.drawImage(lastImage, 0, 0, null);
         int r = 40;
 
+        graphics2D.drawString("guess: " + guess, this.getWidth() / 2, 20);
+
         for (int i = 0; i < pointsToDraw.size(); i++) {
+            // Create a new instance of the RadialGradientPaint class.
+            // Point2D center = new Point2D.Float(pointsToDraw.get(i)[0],
+            // pointsToDraw.get(i)[1]);
+            // float radius = r;
+            // float[] dist = { 0.2f, 0.9f };
+            // Color[] colors = { Color.WHITE, Color.BLACK };
+            // RadialGradientPaint p = new RadialGradientPaint(center, radius, dist,
+            // colors);
+            // graphics2D.setPaint(p);
             graphics2D.fillOval(pointsToDraw.get(i)[0] - (r / 2), pointsToDraw.get(i)[1] - (r / 2), r, r);
         }
 
@@ -84,20 +100,28 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
     public static void main(String[] args) throws Exception {
         HandDrawDigitRecognition h = new HandDrawDigitRecognition();
 
-        int[] nodes = {784, 200, 80, 10};
+        int[] nodes = { 784, 200, 80, 10 };
         ir = new NeuralNetwork(nodes);
         ir.loadNetwork("digitRecognition");
-//        h.train(ir, 2);
-//        System.out.println("saving");
-//        ir.saveNetwork("digitRecognition");
-//        System.out.println("done");
+        // h.train(ir, 1);
+        // System.out.println("saving");
+        // ir.saveNetwork("digitRecognition");
+        // System.out.println("done");
 
         h.setFrame();
 
-//        TrainingData td = new TrainingData(h.readImage(71), h.readLable(71));
-//        int output = h.use(ir, td.getImage());
-//        System.out.println(td.getLabel());
-//        System.out.println(output);
+        // int correct = 0;
+        // for (int i = 50000; i < 51000; i++) {
+        // TrainingData td = new TrainingData(h.readImage(i), h.readLable(i));
+        // int output = h.use(ir, td.getImage());
+        // if (output == td.getLabel()) {
+        // correct++;
+        // }
+        // System.out.println(td.getLabel());
+        // System.out.println(output);
+        // }
+        // System.out.println(correct);
+
         h.repaint();
 
     }
@@ -110,23 +134,23 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
 
         frame.setSize(500, 500);
 
-        //setting start position of the frame
+        // setting start position of the frame
         frame.setLocationRelativeTo(null);
 
-        //closing
+        // closing
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //Title
+        // Title
         frame.setTitle("num");
 
         frame.setBackground(Color.white);
 
-        //set frame visibility
+        // set frame visibility
         frame.setVisible(true);
 
-        //adding  a key listner
+        // adding a key listner
         frame.addKeyListener(this);
-        //adding mouse listner
+        // adding mouse listner
         AddMouseHandler();
 
     }
@@ -173,7 +197,7 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
 
     public int use(NeuralNetwork nn, BufferedImage img) throws Exception {
 
-        int[] answers = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        int[] answers = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         double[] input = imageToArray(img);
 
         double[] output = nn.feedforward(input);
@@ -261,45 +285,48 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
     public BufferedImage readImage(int i) throws FileNotFoundException, IOException {
 
         BufferedImage image = new BufferedImage(28, 28, BufferedImage.TYPE_INT_RGB);
-        int imageOffset = 16; //position of first pixel in byte array
+        int imageOffset = 16; // position of first pixel in byte array
         FileInputStream fis = null;
 
         /*
-        TRAINING SET IMAGE FILE (train-images-idx3-ubyte):
-[imageOffset] [type]          [value]          [description]
-0000     32 bit integer  0x00000803(2051) magic number
-0004     32 bit integer  60000            number of images
-0008     32 bit integer  28               number of rows
-0012     32 bit integer  28               number of columns
-0016     unsigned byte   ??               pixel
-0017     unsigned byte   ??               pixel
-........
-xxxx     unsigned byte   ??               pixel
-Pixels are organized row-wise. Pixel values are 0 to 255. 0 means background (white), 255 means foreground (black).
+         * TRAINING SET IMAGE FILE (train-images-idx3-ubyte):
+         * [imageOffset] [type] [value] [description]
+         * 0000 32 bit integer 0x00000803(2051) magic number
+         * 0004 32 bit integer 60000 number of images
+         * 0008 32 bit integer 28 number of rows
+         * 0012 32 bit integer 28 number of columns
+         * 0016 unsigned byte ?? pixel
+         * 0017 unsigned byte ?? pixel
+         * ........
+         * xxxx unsigned byte ?? pixel
+         * Pixels are organized row-wise. Pixel values are 0 to 255. 0 means background
+         * (white), 255 means foreground (black).
          */
         File infile = new File("train-images-idx3-ubyte");
         fis = new FileInputStream(infile);
 
-        //byte array to store data from iamge file
-        //byte array interprests value as two's complement (signed)
+        // byte array to store data from iamge file
+        // byte array interprests value as two's complement (signed)
         byte[] buffer = new byte[(int) infile.length()];
         fis.read(buffer);
 
         int currentPixel = 16 + (i * 784);
-//        int value = 0;
-//        for(int i = 0; i < 4; i++){
-//            value = value * 256 + (buffer[i]& 0xFF);
-//        }
-//        System.out.println("");
-//        System.out.println(value);
+        // int value = 0;
+        // for(int i = 0; i < 4; i++){
+        // value = value * 256 + (buffer[i]& 0xFF);
+        // }
+        // System.out.println("");
+        // System.out.println(value);
 
         for (int y = 0; y < 28; y++) {
             for (int x = 0; x < 28; x++) {
 
-                //& 0xFF, takes the byte into a larger register and extends the 8th bit value to the rest of the following bits,
-                //then ands it with FF which makes the byte unsigned because it flips the extended bit
+                // & 0xFF, takes the byte into a larger register and extends the 8th bit value
+                // to the rest of the following bits,
+                // then ands it with FF which makes the byte unsigned because it flips the
+                // extended bit
                 int pixelValue = buffer[currentPixel] & 0xFF;
-                Color c = new Color(pixelValue, pixelValue, pixelValue);//grey scale colour
+                Color c = new Color(pixelValue, pixelValue, pixelValue);// grey scale colour
                 int rgb = c.getRGB();
                 image.setRGB(x, y, rgb);
                 currentPixel++;
@@ -316,34 +343,34 @@ Pixels are organized row-wise. Pixel values are 0 to 255. 0 means background (wh
         FileInputStream fis = null;
 
         /*
-        TRAINING SET LABEL FILE (train-labels-idx1-ubyte):
-[imageOffset] [type]          [value]          [description]
-0000     32 bit integer  0x00000801(2049) magic number (MSB first)
-0004     32 bit integer  60000            number of items
-0008     unsigned byte   ??               label
-0009     unsigned byte   ??               label
-........
-xxxx     unsigned byte   ??               label
-The labels values are 0 to 9.
+         * TRAINING SET LABEL FILE (train-labels-idx1-ubyte):
+         * [imageOffset] [type] [value] [description]
+         * 0000 32 bit integer 0x00000801(2049) magic number (MSB first)
+         * 0004 32 bit integer 60000 number of items
+         * 0008 unsigned byte ?? label
+         * 0009 unsigned byte ?? label
+         * ........
+         * xxxx unsigned byte ?? label
+         * The labels values are 0 to 9.
          */
         File infile;
         infile = new File("train-labels-idx1-ubyte");
         fis = new FileInputStream(infile);
         byte[] buffer = new byte[(int) infile.length()];
         fis.read(buffer);
-        int labelOffset = 8; //position of first label in byte array
+        int labelOffset = 8; // position of first label in byte array
         int lable = buffer[labelOffset + i];
 
         return lable;
 
     }
 
-    public BufferedImage scaleImage(BufferedImage img) {
+    public BufferedImage scaleImage(BufferedImage img, int w2, int h2) {
         int w = img.getWidth();
         int h = img.getHeight();
         // Create a new image of the proper size
-        int w2 = 28;
-        int h2 = 28;
+        // int w2 = 28;
+        // int h2 = 28;
         double scaleW = ((double) w2 / (double) w);
         double scaleH = ((double) h2 / (double) h);
         BufferedImage scaledImage = new BufferedImage(w2, h2, BufferedImage.TYPE_INT_ARGB);
@@ -355,7 +382,7 @@ The labels values are 0 to 9.
         return scaledImage;
     }
 
-    //adds a mouse listner to the program so the user can draw a digit
+    // adds a mouse listner to the program so the user can draw a digit
     private void AddMouseHandler() {
         MouseInputAdapter mia = new MouseInputAdapter() {
             @Override
@@ -363,8 +390,8 @@ The labels values are 0 to 9.
                 Point p = e.getPoint();
                 int mouseX = p.x;
                 int mouseY = p.y;
-                //draw
-                Integer[] point = {mouseX, mouseY};
+                // draw
+                Integer[] point = { mouseX, mouseY };
                 pointsToDraw.add(point);
                 repaint();
             }
@@ -374,8 +401,8 @@ The labels values are 0 to 9.
                 Point p = md.getPoint();
                 int mouseX = p.x;
                 int mouseY = p.y;
-                //draw
-                Integer[] point = {mouseX, mouseY};
+                // draw
+                Integer[] point = { mouseX, mouseY };
                 pointsToDraw.add(point);
                 repaint();
             }
@@ -395,24 +422,28 @@ The labels values are 0 to 9.
     public void keyPressed(KeyEvent ke) {
         switch (ke.getKeyCode()) {
             case 10:
-                //pressing enter
+                // pressing enter
                 image = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
                 Graphics2D graphics2D = image.createGraphics();
                 this.paint(graphics2D);
 
-                image = this.scaleImage(image);
+                // scale the image too small, then scale it back up to 28 x 28
+                // this will give the image the low quality, shitty look like the MNIST data
+                image = this.scaleImage(image, 20, 20);
+                image = this.scaleImage(image, 28, 28);
                 lastImage = image;
 
-                 {
-                    try {
-                        int output = use(ir, image);
-                        System.out.println(output);
-                        pointsToDraw.clear();
-                        repaint();
-                    } catch (Exception ex) {
-                        Logger.getLogger(HandDrawDigitRecognition.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+            {
+                try {
+                    int output = use(ir, image);
+                    guess = output;
+                    System.out.println(output);
+                    pointsToDraw.clear();
+                    repaint();
+                } catch (Exception ex) {
+                    Logger.getLogger(HandDrawDigitRecognition.class.getName()).log(Level.SEVERE, null, ex);
                 }
+            }
 
                 break;
             default:
