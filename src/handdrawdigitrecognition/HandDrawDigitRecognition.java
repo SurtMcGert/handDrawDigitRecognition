@@ -9,27 +9,18 @@ import NeuralNetwork.NeuralNetwork;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.util.List;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Point2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,11 +30,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.GZIPInputStream;
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import static javax.swing.Spring.scale;
 import javax.swing.event.MouseInputAdapter;
 
 /**
@@ -77,15 +65,6 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
         graphics2D.drawString("guess: " + guess, this.getWidth() / 2, 20);
 
         for (int i = 0; i < pointsToDraw.size(); i++) {
-            // Create a new instance of the RadialGradientPaint class.
-            // Point2D center = new Point2D.Float(pointsToDraw.get(i)[0],
-            // pointsToDraw.get(i)[1]);
-            // float radius = r;
-            // float[] dist = { 0.2f, 0.9f };
-            // Color[] colors = { Color.WHITE, Color.BLACK };
-            // RadialGradientPaint p = new RadialGradientPaint(center, radius, dist,
-            // colors);
-            // graphics2D.setPaint(p);
             graphics2D.fillOval(pointsToDraw.get(i)[0] - (r / 2), pointsToDraw.get(i)[1] - (r / 2), r, r);
         }
 
@@ -111,16 +90,15 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
         h.setFrame();
 
         // int correct = 0;
-        // for (int i = 50000; i < 51000; i++) {
+        // System.out.println("testing");
+        // for (int i = 50000; i < 60000; i++) {
         // TrainingData td = new TrainingData(h.readImage(i), h.readLable(i));
         // int output = h.use(ir, td.getImage());
         // if (output == td.getLabel()) {
         // correct++;
         // }
-        // System.out.println(td.getLabel());
-        // System.out.println(output);
         // }
-        // System.out.println(correct);
+        // System.out.println((((float) correct / 10000) * 100) + "%");
 
         h.repaint();
 
@@ -223,7 +201,7 @@ public class HandDrawDigitRecognition extends JPanel implements KeyListener, Act
             for (int x = 0; x < img.getHeight(); x++) {
 
                 Color c = new Color(img.getRGB(x, y));
-                pixels[currentPixel] = (double) c.getRed() / 255;
+                pixels[currentPixel] = (double) Math.round((double) c.getRed() / 255);
 
                 currentPixel++;
 
